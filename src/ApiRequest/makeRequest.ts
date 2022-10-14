@@ -1,4 +1,5 @@
 import axios, { Method } from 'axios';
+import * as Util from 'util';
 
 /**
  * @param {string} url
@@ -6,13 +7,10 @@ import axios, { Method } from 'axios';
  * @param {string|null} token
  * @return {Promise<any>}
  */
-export const makeRequest = async (url: string, method: Method, token?: string): Promise<any> => {
-  const headers =
-    token != null
-      ? {
-          authorization: `Bot ` + token,
-        }
-      : {};
+export const makeRequest = async <T>(url: string, method: Method, token: string | undefined): Promise<T> => {
+  const headers = {
+    authorization: Util.format(`Bot %s`, token),
+  };
 
   return await new Promise(
     async (resolve, reject) =>

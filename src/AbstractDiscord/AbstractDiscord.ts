@@ -3,15 +3,15 @@ import { Method } from 'axios';
 import { makeRequest } from '../ApiRequest/makeRequest';
 import TypeException from '../exception/TypeException';
 
-export default abstract class AbstractDiscord {
-  private readonly token: string;
+export default abstract class AbstractDiscord<T> {
+  protected readonly options: AbstractDiscordOptions;
 
   /**
    * @param {AbstractDiscordOptions} options
    */
   protected constructor(options: AbstractDiscordOptions) {
     if (typeof options.token !== 'string') throw new TypeException('string', typeof options.token, 'token');
-    this.token = options.token;
+    this.options = options;
   }
 
   /**
@@ -19,7 +19,7 @@ export default abstract class AbstractDiscord {
    * @param {Method} method
    * @return {Promise<any>}
    */
-  protected readonly makeRequest = async (url: string, method: Method): Promise<any> => {
-    return await makeRequest(url, method, this.token);
+  public readonly makeRequest = async (url: string, method: Method): Promise<T[]> => {
+    return await makeRequest<T[]>(url, method, this.options.token);
   };
 }

@@ -1,14 +1,13 @@
 import AbstractDiscord from '../AbstractDiscord/AbstractDiscord';
 import { AbstractExportOptions, fileExtension } from './AbstractExportOptions';
-import UtilsFileSystem from '../utils/UtilsFileSystem';
-import path from 'path';
 import TypeException from '../exception/TypeException';
+import { writeFile } from '../utils/UtilFileSystem';
+import path from 'path';
 import * as Util from 'util';
-import UtilSerialize from '../utils/UtilSerialize';
 
-export default abstract class AbstractExport<T> extends AbstractDiscord {
-  public abstract whitelistData: Array<keyof T>;
-  public abstract url(): string;
+export default abstract class AbstractExport<T> extends AbstractDiscord<T> {
+  public abstract whitelistAttrs: Array<keyof T>;
+  public abstract url(): string | undefined;
   protected readonly options: AbstractExportOptions<T>;
 
   protected constructor(options: AbstractExportOptions<T>) {
@@ -16,41 +15,60 @@ export default abstract class AbstractExport<T> extends AbstractDiscord {
 
     if (!fileExtension.includes(options.format))
       throw new TypeException(fileExtension.join(', '), options.format, 'format');
-
-    if (!Array.isArray(options.whiteList)) throw new TypeException('array', typeof options.whiteList, 'whiteList');
+    if (!Array.isArray(options.whitelistAttrs))
+      throw new TypeException('array', typeof options.whitelistAttrs, 'whiteList');
 
     this.options = options;
-
-    switch (options.format) {
-      case 'json':
-        void this.exportJson();
-        break;
-      case 'csv':
-        void this.exportCsv();
-        break;
-    }
+    void this.exportJson();
   }
 
-  private readonly getWhiteListData = (): Array<keyof T> =>
-    this.options.whiteList != null ? (this.whitelistData = this.options.whiteList) : this.whitelistData;
+  private readonly exportJson = async (): Promise<void> => {
+    console.log(this.url());
+    // this.normalizeList(await this.getRequest(), this.whitelistAttrs);
+    // this.writeFile(JSON.stringify(await this.getRequest()));
+  };
 
-  private readonly writeFile = (data: any): void => {
-    UtilsFileSystem.writeFile(
+  /* private readonly normalizeList = (list: T[], whitelistAttrs: Array<keyof T>): Array<Partial<T>> => {
+    const res: Array<Partial<T>> = [];
+    list.forEach((obj) => {
+      return res.push(this.normalize(obj, whitelistAttrs));
+    });
+    return res;
+  }; */
+
+  /* private readonly normalize = (object: T, whitelistAttrs: Array<keyof T>): Partial<T> => {
+    const res: Partial<T> = {};
+    whitelistAttrs.map((s) => {
+      console.log(s);
+      return s
+        .toString()
+        .replace(/\[([^[\]]*)]/g, '.$1.')
+        .split('.')
+        .filter((t) => t !== '')
+        .reduce((prev, cur) => (prev[cur] !== undefined ? prev[cur] : 'N/A'), object);
+    });
+    return res;
+  }; */
+
+  private readonly getRequest = async (): Promise<T[]> => {
+    return (await this.makeRequest(this.url, 'GET')).reverse();
+  };
+
+  public readonly getWhitelistAttrs = (): Array<keyof T> =>
+    this.options.whitelistAttrs != null ? (this.whitelistAttrs = this.options.whitelistAttrs) : this.whitelistAttrs;
+
+  private readonly writeFile = (data: string | NodeJS.ArrayBufferView): void =>
+    writeFile(
       data,
       path.join(this.options.output ?? process.cwd(), this.options.fileName ?? Util.format('export_%s', Date.now())),
       this.options.format,
     );
-  };
+  /*
 
-  private readonly getRequest = async (): Promise<T[]> => (await this.makeRequest(this.url(), 'GET')).reverse();
 
-  private readonly exportJson = async (): Promise<void> => {
-    if (this.url() == null) throw new Error('fgiojgisdjgisdjio');
-    this.writeFile(JSON.stringify(await this.getRequest()));
-  };
 
   private readonly exportCsv = async (): Promise<void> => {
-    const data = this.serializeList(await this.getRequest()) as Array<Record<string, any>>;
+    const data = this.serializeList(await this.getRequest());
     const res = [this.getWhiteListData().join(';')];
     data.forEach((obj) => {
       res.push(Object.values(obj).join(';'));
@@ -58,19 +76,15 @@ export default abstract class AbstractExport<T> extends AbstractDiscord {
     this.writeFile(res.join('\n'));
   };
 
-  /**
+  /!**
    * @template T
    * @param {T[]} object
-   */
-  private readonly serialize = (object: T): Record<string, any> => {
-    return UtilSerialize.normalize(object as Record<string, any>, this.getWhiteListData() as string[]);
+   *!/
+  private readonly serializeList = (object: ArrayObjectBlaBla): ArrayObjectBlaBla => {
+    return this.normalizeList(object, this.getWhiteListData());
   };
 
-  /**
-   * @template T
-   * @param {T[]} object
-   */
-  private readonly serializeList = (object: T[]): Record<string, any> => {
-    return UtilSerialize.normalizeList(object as Array<Record<string, any>>, this.getWhiteListData() as string[]);
-  };
+
+
+  */
 }

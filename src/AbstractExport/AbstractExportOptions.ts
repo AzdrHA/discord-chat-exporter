@@ -6,5 +6,5 @@ export type AbstractExportOptions<T> = {
   output?: string;
   fileName?: string;
   format: FileExtension;
-  whiteList?: Array<keyof T>;
+  whitelistAttrs?: Array<keyof T>;
 } & AbstractDiscordOptions;

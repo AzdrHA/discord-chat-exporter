@@ -7,7 +7,7 @@ import * as Util from 'util';
 
 export default abstract class AbstractExport<T> extends AbstractDiscord<T> {
   public abstract whitelistAttrs: Array<keyof T>;
-  public abstract url(): string | undefined;
+  public abstract url(): string;
   protected readonly options: AbstractExportOptions<T>;
 
   protected constructor(options: AbstractExportOptions<T>) {
@@ -23,35 +23,38 @@ export default abstract class AbstractExport<T> extends AbstractDiscord<T> {
   }
 
   private readonly exportJson = async (): Promise<void> => {
-    console.log(this.url());
-    // this.normalizeList(await this.getRequest(), this.whitelistAttrs);
-    // this.writeFile(JSON.stringify(await this.getRequest()));
+    this.normalizeList(await this.getRequest(), this.whitelistAttrs);
+    this.writeFile(JSON.stringify(await this.getRequest()));
   };
 
-  /* private readonly normalizeList = (list: T[], whitelistAttrs: Array<keyof T>): Array<Partial<T>> => {
+  private readonly normalizeList = (list: T[], whitelistAttrs: Array<keyof T>): Array<Partial<T>> => {
     const res: Array<Partial<T>> = [];
     list.forEach((obj) => {
       return res.push(this.normalize(obj, whitelistAttrs));
     });
     return res;
-  }; */
+  };
 
-  /* private readonly normalize = (object: T, whitelistAttrs: Array<keyof T>): Partial<T> => {
+  private readonly normalize = (object: T, whitelistAttrs: Array<keyof T>): Partial<T> => {
     const res: Partial<T> = {};
     whitelistAttrs.map((s) => {
       console.log(s);
-      return s
-        .toString()
-        .replace(/\[([^[\]]*)]/g, '.$1.')
-        .split('.')
-        .filter((t) => t !== '')
-        .reduce((prev, cur) => (prev[cur] !== undefined ? prev[cur] : 'N/A'), object);
+      return (
+        s
+          .toString()
+          .replace(/\[([^[\]]*)]/g, '.$1.')
+          .split('.')
+          .filter((t) => t !== '')
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-expect-error
+          .reduce((prev, cur) => (prev[cur] !== undefined ? prev[cur] : 'N/A'), object)
+      );
     });
     return res;
-  }; */
+  };
 
   private readonly getRequest = async (): Promise<T[]> => {
-    return (await this.makeRequest(this.url, 'GET')).reverse();
+    return (await this.makeRequest(this.url(), 'GET')).reverse();
   };
 
   public readonly getWhitelistAttrs = (): Array<keyof T> =>

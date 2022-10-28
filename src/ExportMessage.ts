@@ -13,7 +13,7 @@ export default class ExportMessage extends AbstractExport<Message> {
     this.options = options;
   }
 
-  public url(): string | undefined {
+  public url(): string {
     return Util.format('/channels/%s/messages', this.options.channel);
   }
 }
